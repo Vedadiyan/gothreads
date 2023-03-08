@@ -1,4 +1,4 @@
-package gothreads
+package main
 
 import (
 	"sync"
@@ -12,9 +12,11 @@ import (
 #ifdef _WIN32
 #include <windows.h>
 
+typedef HANDLE handle;
+
 extern void callback(int id);
 
-static inline HANDLE Create(int id) {
+static inline handle Create(int id) {
     HANDLE hThread;
     DWORD dwThreadId;
     DWORD WINAPI thread_func(LPVOID lpParam)
@@ -29,12 +31,12 @@ static inline HANDLE Create(int id) {
     return hThread;
 }
 
-static inline void Terminate(HANDLE handle) {
+static inline void Terminate(handle handle) {
     TerminateThread(handle, 0);
     CloseHandle(handle);
 }
 
-static inline void Close(HANDLE handle) {
+static inline void Close(handle handle) {
     CloseHandle(handle);
 }
 
@@ -42,19 +44,21 @@ static inline void Close(HANDLE handle) {
 #include <pthread.h>
 #include <unistd.h>
 
+typedef pthread_t handle;
+
 extern void callback(int id);
 
-static inline pthread_t Create(int id) {
+static inline handle Create(int id) {
     pthread_t thread;
     pthread_create(&thread, NULL, (void* (*)(void*))callback, (void*)(uintptr_t)id);
     return thread;
 }
 
-static inline void Terminate(pthread_t thread) {
+static inline void Terminate(handle thread) {
     pthread_cancel(thread);
 }
 
-static inline void Close(pthread_t thread) {
+static inline void Close(handle thread) {
     // nothing to do here
     // pthread_t handles are not explicitly closed
 }
@@ -80,7 +84,7 @@ type Thread struct {
 	id     C.int
 	done   chan bool
 	result chan any
-	handle C.HANDLE
+	handle C.handle
 }
 
 func New(fn func() any) *Thread {
