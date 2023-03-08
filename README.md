@@ -1,5 +1,5 @@
 # GOTHREADS 
-gothreads is a library that allows you to create OS threads. It relies on C to create OS threads and allows you cancel them when required. 
+gothreads is a library that allows you to create OS threads. It relies on C to create OS threads and allows you to cancel them when required. 
 
 ## Purpose 
 If you need classical threads or you don't like go routines for any reason, you can use this library. 
