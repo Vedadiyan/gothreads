@@ -1,10 +1,8 @@
 package gothreads
 
 import (
-	"fmt"
 	"sync"
 	"sync/atomic"
-	"time"
 )
 
 /*
@@ -76,7 +74,7 @@ func callback(id C.int) {
 }
 
 var _threadPool sync.Map
-var id atomic.Int32
+var _id atomic.Int32
 
 type Thread struct {
 	id     C.int
@@ -87,7 +85,7 @@ type Thread struct {
 
 func New(fn func() any) *Thread {
 	thread := Thread{
-		id:     C.int(id.Add(1)),
+		id:     C.int(_id.Add(1)),
 		done:   make(chan bool),
 		result: make(chan any),
 	}
