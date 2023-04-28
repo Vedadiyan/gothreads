@@ -1,75 +1,20 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"sync"
 	"sync/atomic"
+	"time"
 )
 
-/*
-#include <stdio.h>
-#include <stdint.h>
-
-#ifdef _WIN32
-#include <windows.h>
-
-typedef HANDLE handle;
-
-extern void callback(int id);
-
-static inline handle Create(int id) {
-    HANDLE hThread;
-    DWORD dwThreadId;
-    DWORD WINAPI thread_func(LPVOID lpParam)
-    {
-        callback((int)(uintptr_t)lpParam);
-        return 0;
-    }
-    hThread = CreateThread(NULL, 0, thread_func, (LPVOID)(uintptr_t)id, 0, &dwThreadId);
-    if (hThread == NULL) {
-        printf("Failed to create thread!\n");
-    }
-    return hThread;
-}
-
-static inline void Terminate(handle handle) {
-    TerminateThread(handle, 0);
-    CloseHandle(handle);
-}
-
-static inline void Close(handle handle) {
-    CloseHandle(handle);
-}
-
-#else
-#include <pthread.h>
-#include <unistd.h>
-
-typedef pthread_t handle;
-
-extern void callback(int id);
-
-static inline handle Create(int id) {
-    pthread_t thread;
-    pthread_create(&thread, NULL, (void* (*)(void*))callback, (void*)(uintptr_t)id);
-    return thread;
-}
-
-static inline void Terminate(handle thread) {
-    pthread_cancel(thread);
-}
-
-static inline void Close(handle thread) {
-    // nothing to do here
-    // pthread_t handles are not explicitly closed
-}
-
-#endif
-*/
+//#include "lib/threads.c"
 import "C"
 
 //export callback
 func callback(id C.int) {
 	fn, ok := _threadPool.Load(id)
+	C.SetAttributes()
 	if ok {
 		fn.(func())()
 		return
@@ -82,7 +27,7 @@ var _id atomic.Int32
 
 type Thread struct {
 	id     C.int
-	done   chan bool
+	done   bool
 	result chan any
 	handle C.handle
 }
@@ -90,13 +35,13 @@ type Thread struct {
 func New(fn func() any) *Thread {
 	thread := Thread{
 		id:     C.int(_id.Add(1)),
-		done:   make(chan bool),
+		done:   false,
 		result: make(chan any),
 	}
 	_threadPool.Store(thread.id, func() {
 		result := fn()
 		C.Close(thread.handle)
-		thread.done <- true
+		thread.done = true
 		thread.result <- result
 	})
 	return &thread
@@ -111,6 +56,41 @@ func (t *Thread) Stop() {
 	_threadPool.Delete(t.id)
 }
 
-func (t *Thread) Await() <-chan any {
+func (t *Thread) Wait(ctx context.Context) any {
+	select {
+	case <-ctx.Done():
+		{
+			return nil
+		}
+	case r := <-t.result:
+		{
+			return r
+		}
+	}
+}
+
+func (t *Thread) Await() chan any {
 	return t.result
+}
+
+func main() {
+	t := New(func() any {
+		for i := 0; i < 1000; i++ {
+			fmt.Println(i)
+			<-time.After(time.Second)
+		}
+		return nil
+	})
+	t.Start()
+	t2 := New(func() any {
+		for i := 0; i < 1000; i++ {
+			fmt.Println(i)
+			<-time.After(time.Second)
+		}
+		return nil
+	})
+	t2.Start()
+	<-time.After(time.Second * 5)
+	t.Stop()
+	<-time.After(time.Hour)
 }
