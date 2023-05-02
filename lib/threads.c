@@ -83,12 +83,12 @@ static inline void Close(handle thread) {
 
 static inline void Suspend(handle handle)
 {
-
+    // it's hard to implement it 
 }
 
 static inline void Resume(handle handle)
 {
-   
+   // it's hard to implement it 
 }
 
 #endif
