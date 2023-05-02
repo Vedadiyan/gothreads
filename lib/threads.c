@@ -36,6 +36,22 @@ static inline void Close(handle handle) {
     CloseHandle(handle);
 }
 
+static inline void Join(handle handle) {
+    WaitForSingleObject(handle, INFINITE);
+}
+
+static inline void JoinWithTimeout(handle handle, DWORD timeout) {
+    WaitForSingleObject(handle, timeout);
+}
+
+static inline void Suspend(handle handle) {
+    SuspendThread(handle);
+}
+
+static inline void Resume(handle handle) {
+    ResumeThread(handle);
+}
+
 #else
 #include <pthread.h>
 #include <unistd.h>

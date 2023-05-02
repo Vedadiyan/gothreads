@@ -56,6 +56,14 @@ func (t *Thread) Stop() {
 	_threadPool.Delete(t.id)
 }
 
+func (t *Thread) Suspend() {
+	C.Suspend(t.handle)
+}
+
+func (t *Thread) Resume() {
+	C.Resume(t.handle)
+}
+
 func (t *Thread) Wait(ctx context.Context) any {
 	select {
 	case <-ctx.Done():
@@ -82,15 +90,13 @@ func main() {
 		return nil
 	})
 	t.Start()
-	t2 := New(func() any {
-		for i := 0; i < 1000; i++ {
-			fmt.Println(i)
-			<-time.After(time.Second)
-		}
-		return nil
-	})
-	t2.Start()
 	<-time.After(time.Second * 5)
-	t.Stop()
+	t.Suspend()
+	<-time.After(time.Second * 5)
+	t.Resume()
+	<-time.After(time.Second * 5)
+	t.Suspend()
+	<-time.After(time.Second * 5)
+	t.Resume()
 	<-time.After(time.Hour)
 }
