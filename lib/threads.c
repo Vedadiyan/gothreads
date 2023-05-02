@@ -8,7 +8,8 @@ typedef HANDLE handle;
 
 extern void callback(int id);
 
-static inline handle Create(int id) {
+static inline handle Create(int id)
+{
     HANDLE hThread;
     DWORD dwThreadId;
     DWORD WINAPI thread_func(LPVOID lpParam)
@@ -17,38 +18,46 @@ static inline handle Create(int id) {
         return 0;
     }
     hThread = CreateThread(NULL, 0, thread_func, (LPVOID)(uintptr_t)id, 0, &dwThreadId);
-    if (hThread == NULL) {
+    if (hThread == NULL)
+    {
         printf("Failed to create thread!\n");
     }
     return hThread;
 }
 
-static inline void SetAttributes() {
+static inline void SetAttributes()
+{
     // nothing to do here
 }
 
-static inline void Terminate(handle handle) {
+static inline void Terminate(handle handle)
+{
     TerminateThread(handle, 0);
     CloseHandle(handle);
 }
 
-static inline void Close(handle handle) {
+static inline void Close(handle handle)
+{
     CloseHandle(handle);
 }
 
-static inline void Join(handle handle) {
+static inline void Join(handle handle)
+{
     WaitForSingleObject(handle, INFINITE);
 }
 
-static inline void JoinWithTimeout(handle handle, DWORD timeout) {
+static inline void JoinWithTimeout(handle handle, DWORD timeout)
+{
     WaitForSingleObject(handle, timeout);
 }
 
-static inline void Suspend(handle handle) {
+static inline void Suspend(handle handle)
+{
     SuspendThread(handle);
 }
 
-static inline void Resume(handle handle) {
+static inline void Resume(handle handle)
+{
     ResumeThread(handle);
 }
 
@@ -60,35 +69,47 @@ typedef pthread_t handle;
 
 extern void callback(int id);
 
-static inline handle Create(int id) {
+static inline handle Create(int id)
+{
     pthread_t thread;
-    pthread_create(&thread, NULL, (void* (*)(void*))callback, (void*)(uintptr_t)id);
+    pthread_create(&thread, NULL, (void *(*)(void *))callback, (void *)(uintptr_t)id);
     return thread;
 }
 
-static inline void SetAttributes() {
+static inline void SetAttributes()
+{
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 }
 
-static inline void Terminate(handle thread) {
+static inline void Terminate(handle thread)
+{
     pthread_cancel(thread);
 }
 
-static inline void Close(handle thread) {
+static inline void Close(handle thread)
+{
     // nothing to do here
     // pthread_t handles are not explicitly closed
 }
+static inline void Join(handle handle)
+{
+    pthread_join(handle, NULL);
+}
 
+static inline void JoinWithTimeout(handle handle, int timeout)
+{
+    pthread_timedjoin_np(handle, NULL, &timeout);
+}
 
 static inline void Suspend(handle handle)
 {
-    // it's hard to implement it 
+    // it's hard to implement it
 }
 
 static inline void Resume(handle handle)
 {
-   // it's hard to implement it 
+    // it's hard to implement it
 }
 
 #endif
