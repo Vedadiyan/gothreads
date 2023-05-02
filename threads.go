@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"sync"
 	"sync/atomic"
@@ -64,17 +63,14 @@ func (t *Thread) Resume() {
 	C.Resume(t.handle)
 }
 
-func (t *Thread) Wait(ctx context.Context) any {
-	select {
-	case <-ctx.Done():
-		{
-			return nil
-		}
-	case r := <-t.result:
-		{
-			return r
-		}
-	}
+func (t *Thread) Wait() any {
+	C.Join(t.handle)
+	return t.result
+}
+
+func (t *Thread) WaitWithTimeout(time time.Duration) any {
+	C.JoinWithTimeout(t.handle, C.DWORD(time.Milliseconds()))
+	return t.result
 }
 
 func (t *Thread) Await() chan any {
