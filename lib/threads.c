@@ -80,4 +80,15 @@ static inline void Close(handle thread) {
     // pthread_t handles are not explicitly closed
 }
 
+
+static inline void Suspend(handle handle)
+{
+
+}
+
+static inline void Resume(handle handle)
+{
+   
+}
+
 #endif
